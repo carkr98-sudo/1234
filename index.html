@@ -207,7 +207,7 @@
                 <h3>Photo Requirements</h3>
                 <ul>
                     <li>Format: JPEG</li>
-                    <li>Size: 2.5 x 3.5 inches (375 x 525 pixels at 150 DPI)</li>
+                    <li>Size: 2.5 x 3.5 inches (750 x 1050 pixels at 300 DPI)</li>
                     <li>Maximum file size: 150 KB</li>
                 </ul>
             </div>
@@ -315,12 +315,12 @@
 
             const canvas = cropper.getCroppedCanvas();
             
-            // Resize to exact dimensions: 375x525 pixels
+            // Resize to exact dimensions: 750x1050 pixels (300 DPI)
             const resizeCanvas = document.createElement('canvas');
-            resizeCanvas.width = 375;
-            resizeCanvas.height = 525;
+            resizeCanvas.width = 750;
+            resizeCanvas.height = 1050;
             const ctx = resizeCanvas.getContext('2d');
-            ctx.drawImage(canvas, 0, 0, 375, 525);
+            ctx.drawImage(canvas, 0, 0, 750, 1050);
 
             // Convert to JPEG and compress
             await compressImage(resizeCanvas);
@@ -384,7 +384,7 @@
             const isUnderLimit = blob.size <= 150 * 1024;
 
             fileInfo.innerHTML = `
-                <p><strong>Dimensions:</strong> 375 x 525 pixels (2.5 x 3.5 inches at 150 DPI)</p>
+                <p><strong>Dimensions:</strong> 750 x 1050 pixels (2.5 x 3.5 inches at 300 DPI)</p>
                 <p><strong>Format:</strong> JPEG</p>
                 <p><strong>File Size:</strong> <span class="${isUnderLimit ? 'success' : 'error'}">${fileSizeKB} KB</span> ${isUnderLimit ? '✓' : '✗ (Warning: Over 150 KB)'}</p>
                 <p><strong>Quality:</strong> ${(quality * 100).toFixed(0)}%</p>
