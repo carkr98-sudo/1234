@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passport Photo Processor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 60px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: #e8ebff;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .crop-container {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .crop-container.active {
+            display: block;
+        }
+
+        #image {
+            max-width: 100%;
+            display: block;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .requirements {
+            background: #f0f7ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .requirements h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .requirements ul {
+            margin-left: 20px;
+            color: #555;
+        }
+
+        .requirements li {
+            margin: 5px 0;
+        }
+
+        .result-section {
+            display: none;
+            text-align: center;
+        }
+
+        .result-section.active {
+            display: block;
+        }
+
+        .preview-image {
+            max-width: 375px;
+            margin: 20px auto;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+        }
+
+        .file-info {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .file-info p {
+            margin: 5px 0;
+            color: #555;
+        }
+
+        .file-info strong {
+            color: #667eea;
+        }
+
+        .filename-input {
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 400px;
+            margin: 20px auto;
+            display: block;
+        }
+
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📸 Passport Photo Processor</h1>
+        
+        <div class="card">
+            <div class="requirements">
+                <h3>Photo Requirements</h3>
+                <ul>
+                    <li>Format: JPEG</li>
+                    <li>Size: 2.5 x 3.5 inches (375 x 525 pixels at 150 DPI)</li>
+                    <li>Maximum file size: 150 KB</li>
+                </ul>
+            </div>
+
+            <div id="uploadSection">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📁</div>
+                    <h3>Click or drag to upload your photo</h3>
+                    <p>Supports JPG, PNG, and other image formats</p>
+                </div>
+                <input type="file" id="fileInput" accept="image/*">
+            </div>
+
+            <div class="crop-container" id="cropContainer">
+                <img id="image" src="">
+                <div class="controls">
+                    <button class="btn-primary" id="cropBtn">✓ Crop & Process</button>
+                    <button class="btn-secondary" id="cancelBtn">✕ Cancel</button>
+                </div>
+            </div>
+
+            <div class="result-section" id="resultSection">
+                <h2>✓ Photo Processed Successfully!</h2>
+                <img id="previewImage" class="preview-image" src="">
+                <div class="file-info" id="fileInfo"></div>
+                <input type="text" id="filenameInput" class="filename-input" placeholder="Enter filename (without extension)" value="passport-photo">
+                <div class="controls">
+                    <button class="btn-primary" id="downloadBtn">⬇ Download Photo</button>
+                    <button class="btn-secondary" id="newPhotoBtn">Upload New Photo</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let cropper = null;
+        let processedBlob = null;
+
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const uploadSection = document.getElementById('uploadSection');
+        const cropContainer = document.getElementById('cropContainer');
+        const resultSection = document.getElementById('resultSection');
+        const image = document.getElementById('image');
+        const previewImage = document.getElementById('previewImage');
+        const fileInfo = document.getElementById('fileInfo');
+        const filenameInput = document.getElementById('filenameInput');
+
+        // Upload area click
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleFile(file);
+            }
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        });
+
+        function handleFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                image.src = e.target.result;
+                uploadSection.style.display = 'none';
+                cropContainer.classList.add('active');
+                
+                if (cropper) {
+                    cropper.destroy();
+                }
+                
+                // Initialize cropper with 2.5:3.5 aspect ratio
+                cropper = new Cropper(image, {
+                    aspectRatio: 2.5 / 3.5,
+                    viewMode: 1,
+                    autoCropArea: 0.8,
+                    responsive: true,
+                    background: false,
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Crop button
+        document.getElementById('cropBtn').addEventListener('click', async () => {
+            if (!cropper) return;
+
+            const canvas = cropper.getCroppedCanvas();
+            
+            // Resize to exact dimensions: 375x525 pixels
+            const resizeCanvas = document.createElement('canvas');
+            resizeCanvas.width = 375;
+            resizeCanvas.height = 525;
+            const ctx = resizeCanvas.getContext('2d');
+            ctx.drawImage(canvas, 0, 0, 375, 525);
+
+            // Convert to JPEG and compress
+            await compressImage(resizeCanvas);
+        });
+
+        async function compressImage(canvas) {
+            const targetMin = 130 * 1024; // 130 KB
+            const targetMax = 145 * 1024; // 145 KB
+            const maxSize = 150 * 1024; // 150 KB absolute limit
+            
+            let lowQuality = 0.5;
+            let highQuality = 1.0;
+            let bestBlob = null;
+            let bestQuality = 0.95;
+            
+            // Binary search for optimal quality
+            for (let i = 0; i < 15; i++) {
+                const quality = (lowQuality + highQuality) / 2;
+                const blob = await new Promise(resolve => {
+                    canvas.toBlob(resolve, 'image/jpeg', quality);
+                });
+                
+                if (blob.size >= targetMin && blob.size <= targetMax) {
+                    // Perfect range found
+                    bestBlob = blob;
+                    bestQuality = quality;
+                    break;
+                } else if (blob.size < targetMin) {
+                    // Too small, increase quality
+                    lowQuality = quality;
+                    if (blob.size > (bestBlob?.size || 0)) {
+                        bestBlob = blob;
+                        bestQuality = quality;
+                    }
+                } else if (blob.size <= maxSize) {
+                    // Between 145-150KB, acceptable
+                    highQuality = quality;
+                    bestBlob = blob;
+                    bestQuality = quality;
+                } else {
+                    // Over 150KB, reduce quality
+                    highQuality = quality;
+                }
+            }
+            
+            // If we couldn't hit the range, use the best we found
+            if (!bestBlob) {
+                bestBlob = await new Promise(resolve => {
+                    canvas.toBlob(resolve, 'image/jpeg', bestQuality);
+                });
+            }
+            
+            const blob = bestBlob;
+            const quality = bestQuality;
+
+            processedBlob = blob;
+            const url = URL.createObjectURL(blob);
+            previewImage.src = url;
+
+            const fileSizeKB = (blob.size / 1024).toFixed(2);
+            const isUnderLimit = blob.size <= 150 * 1024;
+
+            fileInfo.innerHTML = `
+                <p><strong>Dimensions:</strong> 375 x 525 pixels (2.5 x 3.5 inches at 150 DPI)</p>
+                <p><strong>Format:</strong> JPEG</p>
+                <p><strong>File Size:</strong> <span class="${isUnderLimit ? 'success' : 'error'}">${fileSizeKB} KB</span> ${isUnderLimit ? '✓' : '✗ (Warning: Over 150 KB)'}</p>
+                <p><strong>Quality:</strong> ${(quality * 100).toFixed(0)}%</p>
+            `;
+
+            cropContainer.classList.remove('active');
+            resultSection.classList.add('active');
+        }
+
+        // Download button
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            if (!processedBlob) return;
+
+            const filename = filenameInput.value.trim() || 'passport-photo';
+            const url = URL.createObjectURL(processedBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${filename}.jpg`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // Cancel button
+        document.getElementById('cancelBtn').addEventListener('click', resetApp);
+
+        // New photo button
+        document.getElementById('newPhotoBtn').addEventListener('click', resetApp);
+
+        function resetApp() {
+            if (cropper) {
+                cropper.destroy();
+                cropper = null;
+            }
+            fileInput.value = '';
+            uploadSection.style.display = 'block';
+            cropContainer.classList.remove('active');
+            resultSection.classList.remove('active');
+            processedBlob = null;
+        }
+    </script>
+</body>
+</html>
