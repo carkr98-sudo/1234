@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Passport Photo Processor</title>
+    <title>Photo & PDF Processor</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -15,22 +17,152 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #2c3e50 0%, #000000 100%);
             min-height: 100vh;
             padding: 20px;
+            padding-bottom: 80px;
         }
 
         .container {
-            max-width: 900px;
+            max-width: 1000px;
             margin: 0 auto;
         }
 
         h1 {
             text-align: center;
             color: white;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
             font-size: 2.5em;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 1.1em;
+            margin-bottom: 30px;
+            font-weight: 400;
+        }
+
+        .quote-section {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .quote-text {
+            color: white;
+            font-size: 1.1em;
+            font-style: italic;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .quote-author {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .stats-section {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 30px 0;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stats-section h3 {
+            color: white;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+
+        .stats-count {
+            color: white;
+            font-size: 3em;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .footer {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+
+        .footer h3 {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .footer p {
+            color: rgba(255, 255, 255, 0.95);
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        .footer-credits {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1em;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .footer-author {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .tab {
+            padding: 15px 40px;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            border-radius: 10px 10px 0 0;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
         }
 
         .card {
@@ -42,28 +174,28 @@
         }
 
         .upload-area {
-            border: 3px dashed #667eea;
+            border: 3px dashed #333;
             border-radius: 10px;
             padding: 60px 20px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
-            background: #f8f9ff;
+            background: #f8f8f8;
         }
 
         .upload-area:hover {
-            border-color: #764ba2;
-            background: #f0f2ff;
+            border-color: #000;
+            background: #f0f0f0;
         }
 
         .upload-area.dragover {
-            border-color: #764ba2;
-            background: #e8ebff;
+            border-color: #000;
+            background: #e8e8e8;
         }
 
         .upload-icon {
             font-size: 48px;
-            color: #667eea;
+            color: #333;
             margin-bottom: 10px;
         }
 
@@ -80,7 +212,7 @@
             display: block;
         }
 
-        #image {
+        #image, #pdfFirstPage {
             max-width: 100%;
             display: block;
         }
@@ -104,13 +236,19 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #333 0%, #000 100%);
             color: white;
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .btn-secondary {
@@ -123,15 +261,15 @@
         }
 
         .requirements {
-            background: #f0f7ff;
-            border-left: 4px solid #667eea;
+            background: #f5f5f5;
+            border-left: 4px solid #333;
             padding: 15px;
             margin-bottom: 20px;
             border-radius: 5px;
         }
 
         .requirements h3 {
-            color: #667eea;
+            color: #333;
             margin-bottom: 10px;
         }
 
@@ -196,109 +334,379 @@
             color: #dc3545;
             font-weight: bold;
         }
+
+        .processing {
+            text-align: center;
+            padding: 40px;
+            display: none;
+        }
+
+        .processing.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #333;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .pdf-preview {
+            max-width: 100%;
+            border: 2px solid #333;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📸 Passport Photo Processor</h1>
+        <h1>USMLE Documents Bot</h1>
+        <p class="subtitle">Privacy-first document processing for your medical residency application. All processing happens locally in your browser.</p>
         
-        <div class="card">
-            <div class="requirements">
-                <h3>Photo Requirements</h3>
-                <ul>
-                    <li>Format: JPEG</li>
-                    <li>Size: 2.5 x 3.5 inches (750 x 1050 pixels at 300 DPI)</li>
-                    <li>Maximum file size: 150 KB</li>
-                </ul>
-            </div>
+        <div class="quote-section">
+            <p class="quote-text">You have come a long way, and that alone speaks volumes about your strength, dedication, and resilience. Wishing you the very best for the match ahead. May your hard work open every door you dream of.</p>
+            <div class="quote-author">❤️ Supporting future physicians</div>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('photo')">Headshot</button>
+            <button class="tab" onclick="switchTab('transcript')">MSPE / Transcript</button>
+            <button class="tab" onclick="switchTab('lor')">LOR</button>
+        </div>
 
-            <div id="uploadSection">
-                <div class="upload-area" id="uploadArea">
-                    <div class="upload-icon">📁</div>
-                    <h3>Click or drag to upload your photo</h3>
-                    <p>Supports JPG, PNG, and other image formats</p>
+        <!-- PHOTO TAB -->
+        <div id="photoTab" class="tab-content active">
+            <div class="card">
+                <div class="requirements">
+                    <h3>Photo Requirements</h3>
+                    <ul>
+                        <li>Format: JPEG</li>
+                        <li>Size: 2.5 x 3.5 inches (750 x 1050 pixels at 300 DPI)</li>
+                        <li>Maximum file size: 150 KB</li>
+                    </ul>
                 </div>
-                <input type="file" id="fileInput" accept="image/*">
-            </div>
 
-            <div class="crop-container" id="cropContainer">
-                <img id="image" src="">
-                <div class="controls">
-                    <button class="btn-primary" id="cropBtn">✓ Crop & Process</button>
-                    <button class="btn-secondary" id="cancelBtn">✕ Cancel</button>
+                <div id="photoUploadSection">
+                    <div class="upload-area" id="photoUploadArea">
+                        <div class="upload-icon">📁</div>
+                        <h3>Click or drag to upload your photo</h3>
+                        <p>Supports JPG, PNG, and other image formats</p>
+                    </div>
+                    <input type="file" id="photoFileInput" accept="image/*">
+                </div>
+
+                <div class="crop-container" id="photoCropContainer">
+                    <img id="image" src="">
+                    <div class="controls">
+                        <button class="btn-primary" id="photoCropBtn">✓ Crop & Process</button>
+                        <button class="btn-secondary" id="photoCancelBtn">✕ Cancel</button>
+                    </div>
+                </div>
+
+                <div class="result-section" id="photoResultSection">
+                    <h2>✓ Photo Processed Successfully!</h2>
+                    <img id="previewImage" class="preview-image" src="">
+                    <div class="file-info" id="photoFileInfo"></div>
+                    <input type="text" id="photoFilenameInput" class="filename-input" placeholder="Enter filename (without extension)" value="passport-photo">
+                    <div class="controls">
+                        <button class="btn-primary" id="photoDownloadBtn">⬇ Download Photo</button>
+                        <button class="btn-secondary" id="photoNewBtn">Upload New Photo</button>
+                    </div>
                 </div>
             </div>
+        </div>
 
-            <div class="result-section" id="resultSection">
-                <h2>✓ Photo Processed Successfully!</h2>
-                <img id="previewImage" class="preview-image" src="">
-                <div class="file-info" id="fileInfo"></div>
-                <input type="text" id="filenameInput" class="filename-input" placeholder="Enter filename (without extension)" value="passport-photo">
-                <div class="controls">
-                    <button class="btn-primary" id="downloadBtn">⬇ Download Photo</button>
-                    <button class="btn-secondary" id="newPhotoBtn">Upload New Photo</button>
+        <!-- PDF TAB -->
+        <div id="pdfTab" class="tab-content">
+            <div class="card">
+                <div class="requirements">
+                    <h3>MSPE PDF Requirements</h3>
+                    <ul>
+                        <li>Format: PDF</li>
+                        <li>File size: ≤ 1,200 KB (will compress to 1150-1199 KB)</li>
+                        <li>Image resolution: ≤ 300 dpi</li>
+                        <li>Page dimensions: ≤ 8.5 × 14 inches</li>
+                    </ul>
                 </div>
+
+                <div id="pdfUploadSection">
+                    <div class="upload-area" id="pdfUploadArea">
+                        <div class="upload-icon">📄</div>
+                        <h3>Click or drag to upload your MSPE PDF</h3>
+                        <p>Supports PDF files</p>
+                    </div>
+                    <input type="file" id="pdfFileInput" accept=".pdf">
+                </div>
+
+                <div class="processing" id="pdfProcessing">
+                    <div class="spinner"></div>
+                    <p>Processing PDF... This may take a moment.</p>
+                </div>
+
+                <div class="crop-container" id="pdfCropContainer">
+                    <h3>Crop First Page (will apply to all pages)</h3>
+                    <p style="margin-bottom: 15px; color: #666;">Select the area you want to keep. Maximum dimensions: 8.5 × 14 inches</p>
+                    <canvas id="pdfFirstPage"></canvas>
+                    <div class="controls">
+                        <button class="btn-primary" id="pdfCropBtn">✓ Apply Crop & Process PDF</button>
+                        <button class="btn-secondary" id="pdfCancelBtn">✕ Cancel</button>
+                    </div>
+                </div>
+
+                <div class="result-section" id="pdfResultSection">
+                    <h2>✓ PDF Processed Successfully!</h2>
+                    <div class="file-info" id="pdfFileInfo"></div>
+                    <input type="text" id="pdfFilenameInput" class="filename-input" placeholder="Enter filename (without extension)" value="mspe-document">
+                    <div class="controls">
+                        <button class="btn-primary" id="pdfDownloadBtn">⬇ Download PDF</button>
+                        <button class="btn-secondary" id="pdfNewBtn">Upload New PDF</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TRANSCRIPT TAB -->
+        <div id="transcriptTab" class="tab-content">
+            <div class="card">
+                <div class="requirements">
+                    <h3>MSPE / Medical School Transcript Requirements</h3>
+                    <ul>
+                        <li>Format: PDF</li>
+                        <li>File size: ≤ 1,200 KB (will compress to 1150-1195 KB)</li>
+                        <li>Image resolution: ≤ 300 dpi</li>
+                        <li>Page dimensions: ≤ 8.5 × 14 inches</li>
+                    </ul>
+                </div>
+
+                <div id="transcriptUploadSection">
+                    <div class="upload-area" id="transcriptUploadArea">
+                        <div class="upload-icon">📄</div>
+                        <h3>Click or drag to upload your MSPE / Transcript PDF</h3>
+                        <p>Supports PDF files</p>
+                    </div>
+                    <input type="file" id="transcriptFileInput" accept=".pdf">
+                </div>
+
+                <div class="processing" id="transcriptProcessing">
+                    <div class="spinner"></div>
+                    <p>Processing PDF... This may take a moment.</p>
+                </div>
+
+                <div class="crop-container" id="transcriptCropContainer">
+                    <h3>Crop First Page (will apply to all pages)</h3>
+                    <p style="margin-bottom: 15px; color: #666;">Select the area you want to keep. Maximum dimensions: 8.5 × 14 inches</p>
+                    <canvas id="transcriptFirstPage"></canvas>
+                    <div class="controls">
+                        <button class="btn-primary" id="transcriptCropBtn">✓ Apply Crop & Process PDF</button>
+                        <button class="btn-secondary" id="transcriptCancelBtn">✕ Cancel</button>
+                    </div>
+                </div>
+
+                <div class="result-section" id="transcriptResultSection">
+                    <h2>✓ PDF Processed Successfully!</h2>
+                    <div class="file-info" id="transcriptFileInfo"></div>
+                    <input type="text" id="transcriptFilenameInput" class="filename-input" placeholder="Enter filename (without extension)" value="mspe-transcript-document">
+                    <div class="controls">
+                        <button class="btn-primary" id="transcriptDownloadBtn">⬇ Download PDF</button>
+                        <button class="btn-secondary" id="transcriptNewBtn">Upload New PDF</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LOR TAB -->
+        <div id="lorTab" class="tab-content">
+            <div class="card">
+                <div class="requirements">
+                    <h3>Letter of Recommendation Requirements</h3>
+                    <ul>
+                        <li>Format: PDF</li>
+                        <li>File size: ≤ 1 MB (will compress to 950-999 KB)</li>
+                        <li>Page dimensions: ≤ 8.5 × 11 inches</li>
+                        <li>File name: Cannot contain | * ? \ : < ></li>
+                    </ul>
+                </div>
+
+                <div id="lorUploadSection">
+                    <div class="upload-area" id="lorUploadArea">
+                        <div class="upload-icon">📄</div>
+                        <h3>Click or drag to upload your LOR PDF</h3>
+                        <p>Supports PDF files</p>
+                    </div>
+                    <input type="file" id="lorFileInput" accept=".pdf">
+                </div>
+
+                <div class="processing" id="lorProcessing">
+                    <div class="spinner"></div>
+                    <p>Processing PDF... This may take a moment.</p>
+                </div>
+
+                <div class="crop-container" id="lorCropContainer">
+                    <h3>Crop First Page (will apply to all pages)</h3>
+                    <p style="margin-bottom: 15px; color: #666;">Select the area you want to keep. Maximum dimensions: 8.5 × 11 inches</p>
+                    <canvas id="lorFirstPage"></canvas>
+                    <div class="controls">
+                        <button class="btn-primary" id="lorCropBtn">✓ Apply Crop & Process PDF</button>
+                        <button class="btn-secondary" id="lorCancelBtn">✕ Cancel</button>
+                    </div>
+                </div>
+
+                <div class="result-section" id="lorResultSection">
+                    <h2>✓ PDF Processed Successfully!</h2>
+                    <div class="file-info" id="lorFileInfo"></div>
+                    <input type="text" id="lorFilenameInput" class="filename-input" placeholder="Enter filename (without extension)" value="letter-of-recommendation">
+                    <p style="color: #666; font-size: 14px; margin-top: -15px; margin-bottom: 15px;">Do not use: | * ? \ : < ></p>
+                    <div class="controls">
+                        <button class="btn-primary" id="lorDownloadBtn">⬇ Download PDF</button>
+                        <button class="btn-secondary" id="lorNewBtn">Upload New PDF</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATS SECTION -->
+        <div class="stats-section">
+            <h3>Documents Processed</h3>
+            <div class="stats-count" id="statsCount">0</div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="footer">
+            <h3>Privacy & Security</h3>
+            <p>All document processing happens locally in your browser. No files are uploaded to any server, ensuring complete privacy and security of your sensitive medical documents.</p>
+            <div class="footer-credits">
+                <p>Created with ❤️ for future physicians</p>
+                <p class="footer-author">By Charan Amogh Raj</p>
             </div>
         </div>
     </div>
 
     <script>
-        let cropper = null;
-        let processedBlob = null;
+        // Set up PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-        const fileInput = document.getElementById('fileInput');
-        const uploadArea = document.getElementById('uploadArea');
-        const uploadSection = document.getElementById('uploadSection');
-        const cropContainer = document.getElementById('cropContainer');
-        const resultSection = document.getElementById('resultSection');
+        // Document counter (persistent with localStorage)
+        let documentCount = 0;
+        const statsCountElement = document.getElementById('statsCount');
+
+        // Load count from localStorage
+        function loadDocumentCount() {
+            try {
+                const saved = localStorage.getItem('usmle_doc_count');
+                if (saved) {
+                    documentCount = parseInt(saved);
+                    updateStatsDisplay();
+                }
+            } catch (e) {
+                // localStorage not available, use in-memory counter
+                console.log('localStorage not available, using in-memory counter');
+            }
+        }
+
+        function incrementDocumentCount() {
+            documentCount++;
+            try {
+                localStorage.setItem('usmle_doc_count', documentCount.toString());
+            } catch (e) {
+                // localStorage not available
+                console.log('Could not save to localStorage');
+            }
+            updateStatsDisplay();
+        }
+
+        function updateStatsDisplay() {
+            let display;
+            if (documentCount >= 1000) {
+                display = Math.floor(documentCount / 1000) + 'k+';
+            } else {
+                display = documentCount.toString();
+            }
+            statsCountElement.textContent = display;
+        }
+
+        // Load count on page load
+        loadDocumentCount();
+
+        // Tab switching
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            if (tab === 'photo') {
+                document.querySelector('.tab:nth-child(1)').classList.add('active');
+                document.getElementById('photoTab').classList.add('active');
+            } else if (tab === 'transcript') {
+                document.querySelector('.tab:nth-child(2)').classList.add('active');
+                document.getElementById('transcriptTab').classList.add('active');
+            } else if (tab === 'lor') {
+                document.querySelector('.tab:nth-child(3)').classList.add('active');
+                document.getElementById('lorTab').classList.add('active');
+            }
+        }
+
+        // ==================== PHOTO PROCESSING ====================
+        let photoCropper = null;
+        let processedPhotoBlob = null;
+
+        const photoFileInput = document.getElementById('photoFileInput');
+        const photoUploadArea = document.getElementById('photoUploadArea');
+        const photoUploadSection = document.getElementById('photoUploadSection');
+        const photoCropContainer = document.getElementById('photoCropContainer');
+        const photoResultSection = document.getElementById('photoResultSection');
         const image = document.getElementById('image');
         const previewImage = document.getElementById('previewImage');
-        const fileInfo = document.getElementById('fileInfo');
-        const filenameInput = document.getElementById('filenameInput');
+        const photoFileInfo = document.getElementById('photoFileInfo');
+        const photoFilenameInput = document.getElementById('photoFilenameInput');
 
-        // Upload area click
-        uploadArea.addEventListener('click', () => fileInput.click());
+        photoUploadArea.addEventListener('click', () => photoFileInput.click());
 
-        // Drag and drop
-        uploadArea.addEventListener('dragover', (e) => {
+        photoUploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
-            uploadArea.classList.add('dragover');
+            photoUploadArea.classList.add('dragover');
         });
 
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.classList.remove('dragover');
+        photoUploadArea.addEventListener('dragleave', () => {
+            photoUploadArea.classList.remove('dragover');
         });
 
-        uploadArea.addEventListener('drop', (e) => {
+        photoUploadArea.addEventListener('drop', (e) => {
             e.preventDefault();
-            uploadArea.classList.remove('dragover');
+            photoUploadArea.classList.remove('dragover');
             const file = e.dataTransfer.files[0];
             if (file && file.type.startsWith('image/')) {
-                handleFile(file);
+                handlePhotoFile(file);
             }
         });
 
-        // File input change
-        fileInput.addEventListener('change', (e) => {
+        photoFileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
-                handleFile(file);
+                handlePhotoFile(file);
             }
         });
 
-        function handleFile(file) {
+        function handlePhotoFile(file) {
             const reader = new FileReader();
             reader.onload = (e) => {
                 image.src = e.target.result;
-                uploadSection.style.display = 'none';
-                cropContainer.classList.add('active');
+                photoUploadSection.style.display = 'none';
+                photoCropContainer.classList.add('active');
                 
-                if (cropper) {
-                    cropper.destroy();
+                if (photoCropper) {
+                    photoCropper.destroy();
                 }
                 
-                // Initialize cropper with 2.5:3.5 aspect ratio
-                cropper = new Cropper(image, {
+                photoCropper = new Cropper(image, {
                     aspectRatio: 2.5 / 3.5,
                     viewMode: 1,
                     autoCropArea: 0.8,
@@ -309,34 +717,30 @@
             reader.readAsDataURL(file);
         }
 
-        // Crop button
-        document.getElementById('cropBtn').addEventListener('click', async () => {
-            if (!cropper) return;
+        document.getElementById('photoCropBtn').addEventListener('click', async () => {
+            if (!photoCropper) return;
 
-            const canvas = cropper.getCroppedCanvas();
+            const canvas = photoCropper.getCroppedCanvas();
             
-            // Resize to exact dimensions: 750x1050 pixels (300 DPI)
             const resizeCanvas = document.createElement('canvas');
             resizeCanvas.width = 750;
             resizeCanvas.height = 1050;
             const ctx = resizeCanvas.getContext('2d');
             ctx.drawImage(canvas, 0, 0, 750, 1050);
 
-            // Convert to JPEG and compress
-            await compressImage(resizeCanvas);
+            await compressPhoto(resizeCanvas);
         });
 
-        async function compressImage(canvas) {
-            const targetMin = 130 * 1024; // 130 KB
-            const targetMax = 145 * 1024; // 145 KB
-            const maxSize = 150 * 1024; // 150 KB absolute limit
+        async function compressPhoto(canvas) {
+            const targetMin = 130 * 1024;
+            const targetMax = 145 * 1024;
+            const maxSize = 150 * 1024;
             
             let lowQuality = 0.5;
             let highQuality = 1.0;
             let bestBlob = null;
             let bestQuality = 0.95;
             
-            // Binary search for optimal quality
             for (let i = 0; i < 15; i++) {
                 const quality = (lowQuality + highQuality) / 2;
                 const blob = await new Promise(resolve => {
@@ -344,29 +748,24 @@
                 });
                 
                 if (blob.size >= targetMin && blob.size <= targetMax) {
-                    // Perfect range found
                     bestBlob = blob;
                     bestQuality = quality;
                     break;
                 } else if (blob.size < targetMin) {
-                    // Too small, increase quality
                     lowQuality = quality;
                     if (blob.size > (bestBlob?.size || 0)) {
                         bestBlob = blob;
                         bestQuality = quality;
                     }
                 } else if (blob.size <= maxSize) {
-                    // Between 145-150KB, acceptable
                     highQuality = quality;
                     bestBlob = blob;
                     bestQuality = quality;
                 } else {
-                    // Over 150KB, reduce quality
                     highQuality = quality;
                 }
             }
             
-            // If we couldn't hit the range, use the best we found
             if (!bestBlob) {
                 bestBlob = await new Promise(resolve => {
                     canvas.toBlob(resolve, 'image/jpeg', bestQuality);
@@ -376,53 +775,1173 @@
             const blob = bestBlob;
             const quality = bestQuality;
 
-            processedBlob = blob;
+            processedPhotoBlob = blob;
             const url = URL.createObjectURL(blob);
             previewImage.src = url;
 
             const fileSizeKB = (blob.size / 1024).toFixed(2);
             const isUnderLimit = blob.size <= 150 * 1024;
 
-            fileInfo.innerHTML = `
+            photoFileInfo.innerHTML = `
                 <p><strong>Dimensions:</strong> 750 x 1050 pixels (2.5 x 3.5 inches at 300 DPI)</p>
                 <p><strong>Format:</strong> JPEG</p>
                 <p><strong>File Size:</strong> <span class="${isUnderLimit ? 'success' : 'error'}">${fileSizeKB} KB</span> ${isUnderLimit ? '✓' : '✗ (Warning: Over 150 KB)'}</p>
                 <p><strong>Quality:</strong> ${(quality * 100).toFixed(0)}%</p>
             `;
 
-            cropContainer.classList.remove('active');
-            resultSection.classList.add('active');
+            photoCropContainer.classList.remove('active');
+            photoResultSection.classList.add('active');
         }
 
-        // Download button
-        document.getElementById('downloadBtn').addEventListener('click', () => {
-            if (!processedBlob) return;
+        document.getElementById('photoDownloadBtn').addEventListener('click', () => {
+            if (!processedPhotoBlob) return;
 
-            const filename = filenameInput.value.trim() || 'passport-photo';
-            const url = URL.createObjectURL(processedBlob);
+            const filename = photoFilenameInput.value.trim() || 'passport-photo';
+            const url = URL.createObjectURL(processedPhotoBlob);
             const a = document.createElement('a');
             a.href = url;
             a.download = `${filename}.jpg`;
             a.click();
             URL.revokeObjectURL(url);
+            
+            // Increment document count
+            incrementDocumentCount();
         });
 
-        // Cancel button
-        document.getElementById('cancelBtn').addEventListener('click', resetApp);
+        document.getElementById('photoCancelBtn').addEventListener('click', resetPhotoApp);
+        document.getElementById('photoNewBtn').addEventListener('click', resetPhotoApp);
 
-        // New photo button
-        document.getElementById('newPhotoBtn').addEventListener('click', resetApp);
-
-        function resetApp() {
-            if (cropper) {
-                cropper.destroy();
-                cropper = null;
+        function resetPhotoApp() {
+            if (photoCropper) {
+                photoCropper.destroy();
+                photoCropper = null;
             }
-            fileInput.value = '';
-            uploadSection.style.display = 'block';
-            cropContainer.classList.remove('active');
-            resultSection.classList.remove('active');
-            processedBlob = null;
+            photoFileInput.value = '';
+            photoUploadSection.style.display = 'block';
+            photoCropContainer.classList.remove('active');
+            photoResultSection.classList.remove('active');
+            processedPhotoBlob = null;
+        }
+
+        // ==================== PDF PROCESSING ====================
+        let pdfCropper = null;
+        let pdfDoc = null;
+        let pdfBytes = null;
+        let processedPdfBlob = null;
+
+        const pdfFileInput = document.getElementById('pdfFileInput');
+        const pdfUploadArea = document.getElementById('pdfUploadArea');
+        const pdfUploadSection = document.getElementById('pdfUploadSection');
+        const pdfProcessing = document.getElementById('pdfProcessing');
+        const pdfCropContainer = document.getElementById('pdfCropContainer');
+        const pdfResultSection = document.getElementById('pdfResultSection');
+        const pdfFirstPage = document.getElementById('pdfFirstPage');
+        const pdfFileInfo = document.getElementById('pdfFileInfo');
+        const pdfFilenameInput = document.getElementById('pdfFilenameInput');
+
+        pdfUploadArea.addEventListener('click', () => pdfFileInput.click());
+
+        pdfUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            pdfUploadArea.classList.add('dragover');
+        });
+
+        pdfUploadArea.addEventListener('dragleave', () => {
+            pdfUploadArea.classList.remove('dragover');
+        });
+
+        pdfUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            pdfUploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type === 'application/pdf') {
+                handlePdfFile(file);
+            }
+        });
+
+        pdfFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handlePdfFile(file);
+            }
+        });
+
+        async function handlePdfFile(file) {
+            // Check file size
+            const fileSizeMB = file.size / (1024 * 1024);
+            if (fileSizeMB > 50) {
+                alert('File is too large. Please upload a PDF smaller than 50 MB.');
+                return;
+            }
+
+            pdfUploadSection.style.display = 'none';
+            pdfProcessing.classList.add('active');
+
+            try {
+                // Read file as array buffer
+                const arrayBuffer = await file.arrayBuffer();
+                
+                // Verify it's a valid PDF by checking header
+                const uint8Array = new Uint8Array(arrayBuffer);
+                const header = String.fromCharCode.apply(null, uint8Array.slice(0, 5));
+                
+                if (!header.startsWith('%PDF-')) {
+                    throw new Error('Invalid PDF file: File does not have a valid PDF header');
+                }
+                
+                pdfBytes = uint8Array;
+                
+                // Load PDF with pdf.js for rendering
+                const loadingTask = pdfjsLib.getDocument({
+                    data: uint8Array.slice(0),
+                    useWorkerFetch: false,
+                    isEvalSupported: false,
+                    useSystemFonts: true,
+                    cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
+                    cMapPacked: true,
+                });
+
+                pdfDoc = await loadingTask.promise;
+
+                if (!pdfDoc || pdfDoc.numPages === 0) {
+                    throw new Error('Invalid PDF: No pages found');
+                }
+
+                // Get first page
+                const page = await pdfDoc.getPage(1);
+                const viewport = page.getViewport({ scale: 2.0 });
+
+                pdfFirstPage.width = viewport.width;
+                pdfFirstPage.height = viewport.height;
+
+                const context = pdfFirstPage.getContext('2d');
+                
+                // Render page
+                await page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
+
+                pdfProcessing.classList.remove('active');
+                pdfCropContainer.classList.add('active');
+
+                if (pdfCropper) {
+                    pdfCropper.destroy();
+                }
+
+                // Initialize cropper after canvas is ready
+                setTimeout(() => {
+                    pdfCropper = new Cropper(pdfFirstPage, {
+                        viewMode: 1,
+                        autoCropArea: 0.95,
+                        responsive: true,
+                        background: true,
+                        zoomable: true,
+                        checkCrossOrigin: false,
+                        minCropBoxWidth: 100,
+                        minCropBoxHeight: 100,
+                    });
+                }, 200);
+
+            } catch (error) {
+                console.error('Error loading PDF:', error);
+                pdfProcessing.classList.remove('active');
+                alert('Error loading PDF: ' + error.message + '\n\nPlease make sure:\n- The file is a valid PDF\n- The file is not password protected\n- The file is not corrupted');
+                resetPdfApp();
+            }
+        }
+
+        document.getElementById('pdfCropBtn').addEventListener('click', async () => {
+            if (!pdfCropper || !pdfBytes) return;
+
+            const btn = document.getElementById('pdfCropBtn');
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
+
+            pdfCropContainer.classList.remove('active');
+            pdfProcessing.classList.add('active');
+
+            try {
+                await processPdf();
+            } catch (error) {
+                console.error('Error processing PDF:', error);
+                alert('Error processing PDF. Please try again.');
+                resetPdfApp();
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '✓ Apply Crop & Process PDF';
+            }
+        });
+
+        async function processPdf() {
+            try {
+                const cropData = pdfCropper.getData();
+                
+                // Get the actual crop coordinates from the cropper
+                const cropX = Math.round(cropData.x);
+                const cropY = Math.round(cropData.y);
+                const cropWidth = Math.round(cropData.width);
+                const cropHeight = Math.round(cropData.height);
+
+                const targetMin = 1150 * 1024;
+                const targetMax = 1195 * 1024;
+                const absoluteMax = 1200 * 1024; // Must not exceed this
+
+                // Start with aggressive compression for large files
+                let finalQuality = 0.30;
+                let dpi = 300; // Start at 300 DPI, can reduce to 200 or 150 if needed
+                
+                // Function to process PDF at a given quality and DPI
+                async function processPdfAtQuality(quality, dpiLevel) {
+                    const newPdfDoc = await PDFLib.PDFDocument.create();
+                    
+                    for (let i = 0; i < pdfDoc.numPages; i++) {
+                        const pdfPage = await pdfDoc.getPage(i + 1);
+                        
+                        // Render at specified DPI
+                        const scale = dpiLevel / 72;
+                        const viewport = pdfPage.getViewport({ scale: scale });
+                        
+                        const canvas = document.createElement('canvas');
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
+                        
+                        const context = canvas.getContext('2d');
+                        await pdfPage.render({
+                            canvasContext: context,
+                            viewport: viewport
+                        }).promise;
+                        
+                        // Calculate crop area at the rendered scale
+                        const scaleRatio = viewport.width / pdfFirstPage.width;
+                        const scaledCropX = cropX * scaleRatio;
+                        const scaledCropY = cropY * scaleRatio;
+                        const scaledCropWidth = cropWidth * scaleRatio;
+                        const scaledCropHeight = cropHeight * scaleRatio;
+                        
+                        // Create cropped canvas
+                        const croppedCanvas = document.createElement('canvas');
+                        croppedCanvas.width = scaledCropWidth;
+                        croppedCanvas.height = scaledCropHeight;
+                        
+                        const croppedContext = croppedCanvas.getContext('2d');
+                        croppedContext.drawImage(
+                            canvas,
+                            scaledCropX,
+                            scaledCropY,
+                            scaledCropWidth,
+                            scaledCropHeight,
+                            0,
+                            0,
+                            scaledCropWidth,
+                            scaledCropHeight
+                        );
+                        
+                        // Convert to JPEG
+                        const imageBytes = await new Promise((resolve) => {
+                            croppedCanvas.toBlob((blob) => {
+                                const reader = new FileReader();
+                                reader.onloadend = () => resolve(new Uint8Array(reader.result));
+                                reader.readAsArrayBuffer(blob);
+                            }, 'image/jpeg', quality);
+                        });
+                        
+                        // Calculate page size (max 8.5 x 14 inches = 612 x 1008 points)
+                        const maxWidth = 612;
+                        const maxHeight = 1008;
+                        
+                        let pageWidth = scaledCropWidth / scale * 72;
+                        let pageHeight = scaledCropHeight / scale * 72;
+                        
+                        if (pageWidth > maxWidth || pageHeight > maxHeight) {
+                            const scaleDown = Math.min(maxWidth / pageWidth, maxHeight / pageHeight);
+                            pageWidth *= scaleDown;
+                            pageHeight *= scaleDown;
+                        }
+                        
+                        // Add page with cropped image
+                        const page = newPdfDoc.addPage([pageWidth, pageHeight]);
+                        const img = await newPdfDoc.embedJpg(imageBytes);
+                        
+                        page.drawImage(img, {
+                            x: 0,
+                            y: 0,
+                            width: pageWidth,
+                            height: pageHeight,
+                        });
+                    }
+                    
+                    return await newPdfDoc.save({
+                        useObjectStreams: true,
+                    });
+                }
+                
+                // Try with initial quality at current DPI
+                let pdfBytesProcessed = await processPdfAtQuality(finalQuality, dpi);
+                console.log('Initial attempt: ' + (pdfBytesProcessed.length / 1024).toFixed(2) + ' KB at quality ' + (finalQuality * 100) + '% and ' + dpi + ' DPI');
+                
+                // If initial attempt is too large even at low quality, reduce DPI first
+                if (pdfBytesProcessed.length > absoluteMax) {
+                    if (dpi === 300) {
+                        console.log('File too large, reducing DPI to 200');
+                        dpi = 200;
+                        finalQuality = 0.40;
+                        pdfBytesProcessed = await processPdfAtQuality(finalQuality, dpi);
+                        console.log('After DPI reduction to 200: ' + (pdfBytesProcessed.length / 1024).toFixed(2) + ' KB');
+                    }
+                    
+                    if (pdfBytesProcessed.length > absoluteMax && dpi === 200) {
+                        console.log('Still too large, reducing DPI to 150');
+                        dpi = 150;
+                        finalQuality = 0.50;
+                        pdfBytesProcessed = await processPdfAtQuality(finalQuality, dpi);
+                        console.log('After DPI reduction to 150: ' + (pdfBytesProcessed.length / 1024).toFixed(2) + ' KB');
+                    }
+                }
+                
+                // Adjust quality to hit target range with binary search
+                let lowQuality = 0.10;
+                let highQuality = 0.98;
+                let attempts = 0;
+                
+                while (attempts < 20) {
+                    const size = pdfBytesProcessed.length;
+                    const sizeKB = (size / 1024).toFixed(2);
+                    
+                    console.log('Attempt ' + (attempts + 1) + ': ' + sizeKB + ' KB at quality ' + (finalQuality * 100).toFixed(0) + '% and ' + dpi + ' DPI');
+                    
+                    if (size >= targetMin && size <= targetMax) {
+                        console.log('Target range achieved!');
+                        break;
+                    } else if (size < targetMin) {
+                        // Too small, increase quality
+                        lowQuality = finalQuality;
+                        finalQuality = (finalQuality + highQuality) / 2;
+                        console.log('Too small, increasing quality to ' + (finalQuality * 100).toFixed(0) + '%');
+                        pdfBytesProcessed = await processPdfAtQuality(finalQuality, dpi);
+                    } else {
+                        // Too large, decrease quality or DPI
+                        if (finalQuality > 0.20) {
+                            // Try reducing quality first
+                            highQuality = finalQuality;
+                            finalQuality = (lowQuality + finalQuality) / 2;
+                            console.log('Too large, decreasing quality to ' + (finalQuality * 100).toFixed(0) + '%');
+                            pdfBytesProcessed = await processPdfAtQuality(finalQuality, dpi);
+                        } else if (dpi > 150) {
+                            // Quality too low, reduce DPI instead
+                            console.log('Quality too low, reducing DPI');
+                            if (dpi === 300) {
+                                dpi = 200;
+                            } else if (dpi === 200) {
+                                dpi = 150;
+                            }
+                            finalQuality = 0.50;
+                            lowQuality = 0.10;
+                            highQuality = 0.98;
+                            pdfBytesProcessed = await processPdfAtQuality(finalQuality, dpi);
+                        } else {
+                            // Already at minimum, keep reducing quality
+                            highQuality = finalQuality;
+                            finalQuality = Math.max(0.10, (lowQuality + finalQuality) / 2);
+                            console.log('At minimum DPI, forcing quality to ' + (finalQuality * 100).toFixed(0) + '%');
+                            pdfBytesProcessed = await processPdfAtQuality(finalQuality, dpi);
+                        }
+                    }
+                    
+                    attempts++;
+                    
+                    // Safety check
+                    if (highQuality - lowQuality < 0.005) {
+                        console.log('Quality range converged');
+                        // If still over limit, force one more reduction
+                        if (pdfBytesProcessed.length > absoluteMax) {
+                            finalQuality = Math.max(0.10, finalQuality * 0.9);
+                            pdfBytesProcessed = await processPdfAtQuality(finalQuality, dpi);
+                            console.log('Final force reduction: ' + (pdfBytesProcessed.length / 1024).toFixed(2) + ' KB');
+                        }
+                        break;
+                    }
+                }
+                
+                console.log('Final: ' + (pdfBytesProcessed.length / 1024).toFixed(2) + ' KB at quality ' + (finalQuality * 100).toFixed(0) + '% and ' + dpi + ' DPI');
+
+                processedPdfBlob = new Blob([pdfBytesProcessed], { type: 'application/pdf' });
+
+                const fileSizeKB = (processedPdfBlob.size / 1024).toFixed(2);
+                const isUnderLimit = processedPdfBlob.size <= 1200 * 1024;
+                const isInTargetRange = processedPdfBlob.size >= targetMin && processedPdfBlob.size <= targetMax;
+
+                pdfFileInfo.innerHTML = `
+                    <p><strong>Format:</strong> PDF</p>
+                    <p><strong>Pages:</strong> ${pdfDoc.numPages}</p>
+                    <p><strong>File Size:</strong> <span class="${isUnderLimit ? 'success' : 'error'}">${fileSizeKB} KB</span> ${isInTargetRange ? '✓ (Target: 1150-1195 KB)' : isUnderLimit ? '✓' : '✗ (Over 1,200 KB)'}</p>
+                    <p><strong>Quality:</strong> ${(finalQuality * 100).toFixed(0)}%</p>
+                    <p><strong>Image Resolution:</strong> ${dpi} DPI</p>
+                    <p><strong>Max Page Dimensions:</strong> ≤ 8.5 × 14 inches</p>
+                `;
+
+                pdfProcessing.classList.remove('active');
+                pdfResultSection.classList.add('active');
+
+            } catch (error) {
+                console.error('Detailed error:', error);
+                pdfProcessing.classList.remove('active');
+                alert('Error processing PDF: ' + error.message + '\n\nPlease check the console for more details and try again.');
+                pdfCropContainer.classList.add('active');
+            }
+        }
+
+        document.getElementById('pdfDownloadBtn').addEventListener('click', () => {
+            if (!processedPdfBlob) return;
+
+            const filename = pdfFilenameInput.value.trim() || 'mspe-document';
+            const url = URL.createObjectURL(processedPdfBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${filename}.pdf`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            // Increment document count
+            incrementDocumentCount();
+        });
+
+        document.getElementById('pdfCancelBtn').addEventListener('click', resetPdfApp);
+        document.getElementById('pdfNewBtn').addEventListener('click', resetPdfApp);
+
+        function resetPdfApp() {
+            if (pdfCropper) {
+                pdfCropper.destroy();
+                pdfCropper = null;
+            }
+            pdfFileInput.value = '';
+            pdfDoc = null;
+            pdfBytes = null;
+            processedPdfBlob = null;
+            pdfUploadSection.style.display = 'block';
+            pdfProcessing.classList.remove('active');
+            pdfCropContainer.classList.remove('active');
+            pdfResultSection.classList.remove('active');
+        }
+
+        // ==================== TRANSCRIPT PROCESSING ====================
+        let transcriptCropper = null;
+        let transcriptDoc = null;
+        let transcriptBytes = null;
+        let processedTranscriptBlob = null;
+
+        const transcriptFileInput = document.getElementById('transcriptFileInput');
+        const transcriptUploadArea = document.getElementById('transcriptUploadArea');
+        const transcriptUploadSection = document.getElementById('transcriptUploadSection');
+        const transcriptProcessing = document.getElementById('transcriptProcessing');
+        const transcriptCropContainer = document.getElementById('transcriptCropContainer');
+        const transcriptResultSection = document.getElementById('transcriptResultSection');
+        const transcriptFirstPage = document.getElementById('transcriptFirstPage');
+        const transcriptFileInfo = document.getElementById('transcriptFileInfo');
+        const transcriptFilenameInput = document.getElementById('transcriptFilenameInput');
+
+        transcriptUploadArea.addEventListener('click', () => transcriptFileInput.click());
+
+        transcriptUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            transcriptUploadArea.classList.add('dragover');
+        });
+
+        transcriptUploadArea.addEventListener('dragleave', () => {
+            transcriptUploadArea.classList.remove('dragover');
+        });
+
+        transcriptUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            transcriptUploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type === 'application/pdf') {
+                handleTranscriptFile(file);
+            }
+        });
+
+        transcriptFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleTranscriptFile(file);
+            }
+        });
+
+        async function handleTranscriptFile(file) {
+            const fileSizeMB = file.size / (1024 * 1024);
+            if (fileSizeMB > 50) {
+                alert('File is too large. Please upload a PDF smaller than 50 MB.');
+                return;
+            }
+
+            transcriptUploadSection.style.display = 'none';
+            transcriptProcessing.classList.add('active');
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const uint8Array = new Uint8Array(arrayBuffer);
+                const header = String.fromCharCode.apply(null, uint8Array.slice(0, 5));
+                
+                if (!header.startsWith('%PDF-')) {
+                    throw new Error('Invalid PDF file: File does not have a valid PDF header');
+                }
+                
+                transcriptBytes = uint8Array;
+                
+                const loadingTask = pdfjsLib.getDocument({
+                    data: uint8Array.slice(0),
+                    useWorkerFetch: false,
+                    isEvalSupported: false,
+                    useSystemFonts: true,
+                    cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
+                    cMapPacked: true,
+                });
+
+                transcriptDoc = await loadingTask.promise;
+
+                if (!transcriptDoc || transcriptDoc.numPages === 0) {
+                    throw new Error('Invalid PDF: No pages found');
+                }
+
+                const page = await transcriptDoc.getPage(1);
+                const viewport = page.getViewport({ scale: 2.0 });
+
+                transcriptFirstPage.width = viewport.width;
+                transcriptFirstPage.height = viewport.height;
+
+                const context = transcriptFirstPage.getContext('2d');
+                
+                await page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
+
+                transcriptProcessing.classList.remove('active');
+                transcriptCropContainer.classList.add('active');
+
+                if (transcriptCropper) {
+                    transcriptCropper.destroy();
+                }
+
+                setTimeout(() => {
+                    transcriptCropper = new Cropper(transcriptFirstPage, {
+                        viewMode: 1,
+                        autoCropArea: 0.95,
+                        responsive: true,
+                        background: true,
+                        zoomable: true,
+                        checkCrossOrigin: false,
+                        minCropBoxWidth: 100,
+                        minCropBoxHeight: 100,
+                    });
+                }, 200);
+
+            } catch (error) {
+                console.error('Error loading PDF:', error);
+                transcriptProcessing.classList.remove('active');
+                alert('Error loading PDF: ' + error.message + '\n\nPlease make sure:\n- The file is a valid PDF\n- The file is not password protected\n- The file is not corrupted');
+                resetTranscriptApp();
+            }
+        }
+
+        document.getElementById('transcriptCropBtn').addEventListener('click', async () => {
+            if (!transcriptCropper || !transcriptBytes) return;
+
+            const btn = document.getElementById('transcriptCropBtn');
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
+
+            transcriptCropContainer.classList.remove('active');
+            transcriptProcessing.classList.add('active');
+
+            try {
+                await processTranscript();
+            } catch (error) {
+                console.error('Error processing PDF:', error);
+                alert('Error processing PDF. Please try again.');
+                resetTranscriptApp();
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '✓ Apply Crop & Process PDF';
+            }
+        });
+
+        async function processTranscript() {
+            try {
+                const cropData = transcriptCropper.getData();
+                
+                const cropX = Math.round(cropData.x);
+                const cropY = Math.round(cropData.y);
+                const cropWidth = Math.round(cropData.width);
+                const cropHeight = Math.round(cropData.height);
+
+                const targetMin = 1150 * 1024;
+                const targetMax = 1195 * 1024;
+                const absoluteMax = 1200 * 1024;
+
+                let finalQuality = 0.30;
+                let dpi = 300;
+
+                async function processTranscriptAtQuality(quality, dpiLevel) {
+                    const newPdfDoc = await PDFLib.PDFDocument.create();
+                    
+                    for (let i = 0; i < transcriptDoc.numPages; i++) {
+                        const pdfPage = await transcriptDoc.getPage(i + 1);
+                        
+                        const scale = dpiLevel / 72;
+                        const viewport = pdfPage.getViewport({ scale: scale });
+                        
+                        const canvas = document.createElement('canvas');
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
+                        
+                        const context = canvas.getContext('2d');
+                        await pdfPage.render({
+                            canvasContext: context,
+                            viewport: viewport
+                        }).promise;
+                        
+                        const scaleRatio = viewport.width / transcriptFirstPage.width;
+                        const scaledCropX = cropX * scaleRatio;
+                        const scaledCropY = cropY * scaleRatio;
+                        const scaledCropWidth = cropWidth * scaleRatio;
+                        const scaledCropHeight = cropHeight * scaleRatio;
+                        
+                        const croppedCanvas = document.createElement('canvas');
+                        croppedCanvas.width = scaledCropWidth;
+                        croppedCanvas.height = scaledCropHeight;
+                        
+                        const croppedContext = croppedCanvas.getContext('2d');
+                        croppedContext.drawImage(
+                            canvas,
+                            scaledCropX,
+                            scaledCropY,
+                            scaledCropWidth,
+                            scaledCropHeight,
+                            0,
+                            0,
+                            scaledCropWidth,
+                            scaledCropHeight
+                        );
+                        
+                        const imageBytes = await new Promise((resolve) => {
+                            croppedCanvas.toBlob((blob) => {
+                                const reader = new FileReader();
+                                reader.onloadend = () => resolve(new Uint8Array(reader.result));
+                                reader.readAsArrayBuffer(blob);
+                            }, 'image/jpeg', quality);
+                        });
+                        
+                        const maxWidth = 612;
+                        const maxHeight = 1008;
+                        
+                        let pageWidth = scaledCropWidth / scale * 72;
+                        let pageHeight = scaledCropHeight / scale * 72;
+                        
+                        if (pageWidth > maxWidth || pageHeight > maxHeight) {
+                            const scaleDown = Math.min(maxWidth / pageWidth, maxHeight / pageHeight);
+                            pageWidth *= scaleDown;
+                            pageHeight *= scaleDown;
+                        }
+                        
+                        const page = newPdfDoc.addPage([pageWidth, pageHeight]);
+                        const img = await newPdfDoc.embedJpg(imageBytes);
+                        
+                        page.drawImage(img, {
+                            x: 0,
+                            y: 0,
+                            width: pageWidth,
+                            height: pageHeight,
+                        });
+                    }
+                    
+                    return await newPdfDoc.save({
+                        useObjectStreams: true,
+                    });
+                }
+                
+                let pdfBytesProcessed = await processTranscriptAtQuality(finalQuality, dpi);
+                console.log('Transcript - Initial: ' + (pdfBytesProcessed.length / 1024).toFixed(2) + ' KB at ' + (finalQuality * 100) + '% and ' + dpi + ' DPI');
+                
+                if (pdfBytesProcessed.length > absoluteMax) {
+                    if (dpi === 300) {
+                        dpi = 200;
+                        finalQuality = 0.40;
+                        pdfBytesProcessed = await processTranscriptAtQuality(finalQuality, dpi);
+                    }
+                    
+                    if (pdfBytesProcessed.length > absoluteMax && dpi === 200) {
+                        dpi = 150;
+                        finalQuality = 0.50;
+                        pdfBytesProcessed = await processTranscriptAtQuality(finalQuality, dpi);
+                    }
+                }
+                
+                let lowQuality = 0.10;
+                let highQuality = 0.98;
+                let attempts = 0;
+                
+                while (attempts < 20) {
+                    const size = pdfBytesProcessed.length;
+                    
+                    if (size >= targetMin && size <= targetMax) {
+                        break;
+                    } else if (size < targetMin) {
+                        lowQuality = finalQuality;
+                        finalQuality = (finalQuality + highQuality) / 2;
+                        pdfBytesProcessed = await processTranscriptAtQuality(finalQuality, dpi);
+                    } else {
+                        if (finalQuality > 0.20) {
+                            highQuality = finalQuality;
+                            finalQuality = (lowQuality + finalQuality) / 2;
+                            pdfBytesProcessed = await processTranscriptAtQuality(finalQuality, dpi);
+                        } else if (dpi > 150) {
+                            if (dpi === 300) dpi = 200;
+                            else if (dpi === 200) dpi = 150;
+                            finalQuality = 0.50;
+                            lowQuality = 0.10;
+                            highQuality = 0.98;
+                            pdfBytesProcessed = await processTranscriptAtQuality(finalQuality, dpi);
+                        } else {
+                            highQuality = finalQuality;
+                            finalQuality = Math.max(0.10, (lowQuality + finalQuality) / 2);
+                            pdfBytesProcessed = await processTranscriptAtQuality(finalQuality, dpi);
+                        }
+                    }
+                    
+                    attempts++;
+                    
+                    if (highQuality - lowQuality < 0.005) {
+                        if (pdfBytesProcessed.length > absoluteMax) {
+                            finalQuality = Math.max(0.10, finalQuality * 0.9);
+                            pdfBytesProcessed = await processTranscriptAtQuality(finalQuality, dpi);
+                        }
+                        break;
+                    }
+                }
+
+                processedTranscriptBlob = new Blob([pdfBytesProcessed], { type: 'application/pdf' });
+
+                const fileSizeKB = (processedTranscriptBlob.size / 1024).toFixed(2);
+                const isUnderLimit = processedTranscriptBlob.size <= 1200 * 1024;
+                const isInTargetRange = processedTranscriptBlob.size >= targetMin && processedTranscriptBlob.size <= targetMax;
+
+                transcriptFileInfo.innerHTML = `
+                    <p><strong>Format:</strong> PDF</p>
+                    <p><strong>Pages:</strong> ${transcriptDoc.numPages}</p>
+                    <p><strong>File Size:</strong> <span class="${isUnderLimit ? 'success' : 'error'}">${fileSizeKB} KB</span> ${isInTargetRange ? '✓ (Target: 1150-1195 KB)' : isUnderLimit ? '✓' : '✗ (Over 1,200 KB)'}</p>
+                    <p><strong>Quality:</strong> ${(finalQuality * 100).toFixed(0)}%</p>
+                    <p><strong>Image Resolution:</strong> ${dpi} DPI</p>
+                    <p><strong>Max Page Dimensions:</strong> ≤ 8.5 × 14 inches</p>
+                `;
+
+                transcriptProcessing.classList.remove('active');
+                transcriptResultSection.classList.add('active');
+
+            } catch (error) {
+                console.error('Detailed error:', error);
+                transcriptProcessing.classList.remove('active');
+                alert('Error processing PDF: ' + error.message);
+                transcriptCropContainer.classList.add('active');
+            }
+        }
+
+        document.getElementById('transcriptDownloadBtn').addEventListener('click', () => {
+            if (!processedTranscriptBlob) return;
+
+            const filename = transcriptFilenameInput.value.trim() || 'transcript-document';
+            const url = URL.createObjectURL(processedTranscriptBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${filename}.pdf`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            // Increment document count
+            incrementDocumentCount();
+        });
+
+        document.getElementById('transcriptCancelBtn').addEventListener('click', resetTranscriptApp);
+        document.getElementById('transcriptNewBtn').addEventListener('click', resetTranscriptApp);
+
+        function resetTranscriptApp() {
+            if (transcriptCropper) {
+                transcriptCropper.destroy();
+                transcriptCropper = null;
+            }
+            transcriptFileInput.value = '';
+            transcriptDoc = null;
+            transcriptBytes = null;
+            processedTranscriptBlob = null;
+            transcriptUploadSection.style.display = 'block';
+            transcriptProcessing.classList.remove('active');
+            transcriptCropContainer.classList.remove('active');
+            transcriptResultSection.classList.remove('active');
+        }
+
+        // ==================== LOR PROCESSING ====================
+        let lorCropper = null;
+        let lorDoc = null;
+        let lorBytes = null;
+        let processedLorBlob = null;
+
+        const lorFileInput = document.getElementById('lorFileInput');
+        const lorUploadArea = document.getElementById('lorUploadArea');
+        const lorUploadSection = document.getElementById('lorUploadSection');
+        const lorProcessing = document.getElementById('lorProcessing');
+        const lorCropContainer = document.getElementById('lorCropContainer');
+        const lorResultSection = document.getElementById('lorResultSection');
+        const lorFirstPage = document.getElementById('lorFirstPage');
+        const lorFileInfo = document.getElementById('lorFileInfo');
+        const lorFilenameInput = document.getElementById('lorFilenameInput');
+
+        lorUploadArea.addEventListener('click', () => lorFileInput.click());
+
+        lorUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            lorUploadArea.classList.add('dragover');
+        });
+
+        lorUploadArea.addEventListener('dragleave', () => {
+            lorUploadArea.classList.remove('dragover');
+        });
+
+        lorUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            lorUploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type === 'application/pdf') {
+                handleLorFile(file);
+            }
+        });
+
+        lorFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleLorFile(file);
+            }
+        });
+
+        async function handleLorFile(file) {
+            const fileSizeMB = file.size / (1024 * 1024);
+            if (fileSizeMB > 50) {
+                alert('File is too large. Please upload a PDF smaller than 50 MB.');
+                return;
+            }
+
+            lorUploadSection.style.display = 'none';
+            lorProcessing.classList.add('active');
+
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const uint8Array = new Uint8Array(arrayBuffer);
+                const header = String.fromCharCode.apply(null, uint8Array.slice(0, 5));
+                
+                if (!header.startsWith('%PDF-')) {
+                    throw new Error('Invalid PDF file: File does not have a valid PDF header');
+                }
+                
+                lorBytes = uint8Array;
+                
+                const loadingTask = pdfjsLib.getDocument({
+                    data: uint8Array.slice(0),
+                    useWorkerFetch: false,
+                    isEvalSupported: false,
+                    useSystemFonts: true,
+                    cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
+                    cMapPacked: true,
+                });
+
+                lorDoc = await loadingTask.promise;
+
+                if (!lorDoc || lorDoc.numPages === 0) {
+                    throw new Error('Invalid PDF: No pages found');
+                }
+
+                const page = await lorDoc.getPage(1);
+                const viewport = page.getViewport({ scale: 2.0 });
+
+                lorFirstPage.width = viewport.width;
+                lorFirstPage.height = viewport.height;
+
+                const context = lorFirstPage.getContext('2d');
+                
+                await page.render({
+                    canvasContext: context,
+                    viewport: viewport
+                }).promise;
+
+                lorProcessing.classList.remove('active');
+                lorCropContainer.classList.add('active');
+
+                if (lorCropper) {
+                    lorCropper.destroy();
+                }
+
+                setTimeout(() => {
+                    lorCropper = new Cropper(lorFirstPage, {
+                        viewMode: 1,
+                        autoCropArea: 0.95,
+                        responsive: true,
+                        background: true,
+                        zoomable: true,
+                        checkCrossOrigin: false,
+                        minCropBoxWidth: 100,
+                        minCropBoxHeight: 100,
+                    });
+                }, 200);
+
+            } catch (error) {
+                console.error('Error loading PDF:', error);
+                lorProcessing.classList.remove('active');
+                alert('Error loading PDF: ' + error.message + '\n\nPlease make sure:\n- The file is a valid PDF\n- The file is not password protected\n- The file is not corrupted');
+                resetLorApp();
+            }
+        }
+
+        document.getElementById('lorCropBtn').addEventListener('click', async () => {
+            if (!lorCropper || !lorBytes) return;
+
+            const btn = document.getElementById('lorCropBtn');
+            btn.disabled = true;
+            btn.textContent = 'Processing...';
+
+            lorCropContainer.classList.remove('active');
+            lorProcessing.classList.add('active');
+
+            try {
+                await processLor();
+            } catch (error) {
+                console.error('Error processing PDF:', error);
+                alert('Error processing PDF. Please try again.');
+                resetLorApp();
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '✓ Apply Crop & Process PDF';
+            }
+        });
+
+        async function processLor() {
+            try {
+                const cropData = lorCropper.getData();
+                
+                const cropX = Math.round(cropData.x);
+                const cropY = Math.round(cropData.y);
+                const cropWidth = Math.round(cropData.width);
+                const cropHeight = Math.round(cropData.height);
+
+                const targetMin = 950 * 1024;
+                const targetMax = 999 * 1024;
+                const absoluteMax = 1024 * 1024; // 1 MB
+
+                let finalQuality = 0.30;
+                let dpi = 300;
+
+                async function processLorAtQuality(quality, dpiLevel) {
+                    const newPdfDoc = await PDFLib.PDFDocument.create();
+                    
+                    for (let i = 0; i < lorDoc.numPages; i++) {
+                        const pdfPage = await lorDoc.getPage(i + 1);
+                        
+                        const scale = dpiLevel / 72;
+                        const viewport = pdfPage.getViewport({ scale: scale });
+                        
+                        const canvas = document.createElement('canvas');
+                        canvas.width = viewport.width;
+                        canvas.height = viewport.height;
+                        
+                        const context = canvas.getContext('2d');
+                        await pdfPage.render({
+                            canvasContext: context,
+                            viewport: viewport
+                        }).promise;
+                        
+                        const scaleRatio = viewport.width / lorFirstPage.width;
+                        const scaledCropX = cropX * scaleRatio;
+                        const scaledCropY = cropY * scaleRatio;
+                        const scaledCropWidth = cropWidth * scaleRatio;
+                        const scaledCropHeight = cropHeight * scaleRatio;
+                        
+                        const croppedCanvas = document.createElement('canvas');
+                        croppedCanvas.width = scaledCropWidth;
+                        croppedCanvas.height = scaledCropHeight;
+                        
+                        const croppedContext = croppedCanvas.getContext('2d');
+                        croppedContext.drawImage(
+                            canvas,
+                            scaledCropX,
+                            scaledCropY,
+                            scaledCropWidth,
+                            scaledCropHeight,
+                            0,
+                            0,
+                            scaledCropWidth,
+                            scaledCropHeight
+                        );
+                        
+                        const imageBytes = await new Promise((resolve) => {
+                            croppedCanvas.toBlob((blob) => {
+                                const reader = new FileReader();
+                                reader.onloadend = () => resolve(new Uint8Array(reader.result));
+                                reader.readAsArrayBuffer(blob);
+                            }, 'image/jpeg', quality);
+                        });
+                        
+                        // Max dimensions: 8.5 x 11 inches = 612 x 792 points
+                        const maxWidth = 612;
+                        const maxHeight = 792;
+                        
+                        let pageWidth = scaledCropWidth / scale * 72;
+                        let pageHeight = scaledCropHeight / scale * 72;
+                        
+                        if (pageWidth > maxWidth || pageHeight > maxHeight) {
+                            const scaleDown = Math.min(maxWidth / pageWidth, maxHeight / pageHeight);
+                            pageWidth *= scaleDown;
+                            pageHeight *= scaleDown;
+                        }
+                        
+                        const page = newPdfDoc.addPage([pageWidth, pageHeight]);
+                        const img = await newPdfDoc.embedJpg(imageBytes);
+                        
+                        page.drawImage(img, {
+                            x: 0,
+                            y: 0,
+                            width: pageWidth,
+                            height: pageHeight,
+                        });
+                    }
+                    
+                    return await newPdfDoc.save({
+                        useObjectStreams: true,
+                    });
+                }
+                
+                let pdfBytesProcessed = await processLorAtQuality(finalQuality, dpi);
+                console.log('LOR - Initial: ' + (pdfBytesProcessed.length / 1024).toFixed(2) + ' KB at ' + (finalQuality * 100) + '% and ' + dpi + ' DPI');
+                
+                if (pdfBytesProcessed.length > absoluteMax) {
+                    if (dpi === 300) {
+                        dpi = 200;
+                        finalQuality = 0.40;
+                        pdfBytesProcessed = await processLorAtQuality(finalQuality, dpi);
+                    }
+                    
+                    if (pdfBytesProcessed.length > absoluteMax && dpi === 200) {
+                        dpi = 150;
+                        finalQuality = 0.50;
+                        pdfBytesProcessed = await processLorAtQuality(finalQuality, dpi);
+                    }
+                }
+                
+                let lowQuality = 0.10;
+                let highQuality = 0.98;
+                let attempts = 0;
+                
+                while (attempts < 20) {
+                    const size = pdfBytesProcessed.length;
+                    
+                    if (size >= targetMin && size <= targetMax) {
+                        break;
+                    } else if (size < targetMin) {
+                        lowQuality = finalQuality;
+                        finalQuality = (finalQuality + highQuality) / 2;
+                        pdfBytesProcessed = await processLorAtQuality(finalQuality, dpi);
+                    } else {
+                        if (finalQuality > 0.20) {
+                            highQuality = finalQuality;
+                            finalQuality = (lowQuality + finalQuality) / 2;
+                            pdfBytesProcessed = await processLorAtQuality(finalQuality, dpi);
+                        } else if (dpi > 150) {
+                            if (dpi === 300) dpi = 200;
+                            else if (dpi === 200) dpi = 150;
+                            finalQuality = 0.50;
+                            lowQuality = 0.10;
+                            highQuality = 0.98;
+                            pdfBytesProcessed = await processLorAtQuality(finalQuality, dpi);
+                        } else {
+                            highQuality = finalQuality;
+                            finalQuality = Math.max(0.10, (lowQuality + finalQuality) / 2);
+                            pdfBytesProcessed = await processLorAtQuality(finalQuality, dpi);
+                        }
+                    }
+                    
+                    attempts++;
+                    
+                    if (highQuality - lowQuality < 0.005) {
+                        if (pdfBytesProcessed.length > absoluteMax) {
+                            finalQuality = Math.max(0.10, finalQuality * 0.9);
+                            pdfBytesProcessed = await processLorAtQuality(finalQuality, dpi);
+                        }
+                        break;
+                    }
+                }
+
+                processedLorBlob = new Blob([pdfBytesProcessed], { type: 'application/pdf' });
+
+                const fileSizeKB = (processedLorBlob.size / 1024).toFixed(2);
+                const isUnderLimit = processedLorBlob.size <= 1024 * 1024;
+                const isInTargetRange = processedLorBlob.size >= targetMin && processedLorBlob.size <= targetMax;
+
+                lorFileInfo.innerHTML = `
+                    <p><strong>Format:</strong> PDF</p>
+                    <p><strong>Pages:</strong> ${lorDoc.numPages}</p>
+                    <p><strong>File Size:</strong> <span class="${isUnderLimit ? 'success' : 'error'}">${fileSizeKB} KB</span> ${isInTargetRange ? '✓ (Target: 950-999 KB)' : isUnderLimit ? '✓' : '✗ (Over 1 MB)'}</p>
+                    <p><strong>Quality:</strong> ${(finalQuality * 100).toFixed(0)}%</p>
+                    <p><strong>Image Resolution:</strong> ${dpi} DPI</p>
+                    <p><strong>Max Page Dimensions:</strong> ≤ 8.5 × 11 inches</p>
+                `;
+
+                lorProcessing.classList.remove('active');
+                lorResultSection.classList.add('active');
+
+            } catch (error) {
+                console.error('Detailed error:', error);
+                lorProcessing.classList.remove('active');
+                alert('Error processing PDF: ' + error.message);
+                lorCropContainer.classList.add('active');
+            }
+        }
+
+        document.getElementById('lorDownloadBtn').addEventListener('click', () => {
+            if (!processedLorBlob) return;
+
+            const filename = lorFilenameInput.value.trim() || 'letter-of-recommendation';
+            
+            // Check for invalid characters: | * ? \ : < >
+            const invalidChars = /[|*?\\:<>]/;
+            if (invalidChars.test(filename)) {
+                alert('Invalid filename! Cannot contain these characters: | * ? \\ : < >\n\nPlease remove them and try again.');
+                lorFilenameInput.focus();
+                return;
+            }
+
+            const url = URL.createObjectURL(processedLorBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${filename}.pdf`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            // Increment document count
+            incrementDocumentCount();
+        });
+
+        document.getElementById('lorCancelBtn').addEventListener('click', resetLorApp);
+        document.getElementById('lorNewBtn').addEventListener('click', resetLorApp);
+
+        function resetLorApp() {
+            if (lorCropper) {
+                lorCropper.destroy();
+                lorCropper = null;
+            }
+            lorFileInput.value = '';
+            lorDoc = null;
+            lorBytes = null;
+            processedLorBlob = null;
+            lorUploadSection.style.display = 'block';
+            lorProcessing.classList.remove('active');
+            lorCropContainer.classList.remove('active');
+            lorResultSection.classList.remove('active');
         }
     </script>
 </body>
