@@ -595,33 +595,37 @@
         // Set up PDF.js worker
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-        // Document counter (persistent with localStorage)
+        // Document counter (global with CountAPI)
         let documentCount = 0;
         const statsCountElement = document.getElementById('statsCount');
+        const COUNTAPI_NAMESPACE = 'usmledocbot';
+        const COUNTAPI_KEY = 'documents-processed';
 
-        // Load count from localStorage
-        function loadDocumentCount() {
+        // Load global count from CountAPI
+        async function loadDocumentCount() {
             try {
-                const saved = localStorage.getItem('usmle_doc_count');
-                if (saved) {
-                    documentCount = parseInt(saved);
-                    updateStatsDisplay();
-                }
+                const response = await fetch(`https://api.countapi.xyz/get/${COUNTAPI_NAMESPACE}/${COUNTAPI_KEY}`);
+                const data = await response.json();
+                documentCount = data.value || 0;
+                updateStatsDisplay();
             } catch (e) {
-                // localStorage not available, use in-memory counter
-                console.log('localStorage not available, using in-memory counter');
+                console.log('Could not load count from API, using default');
+                documentCount = 0;
+                updateStatsDisplay();
             }
         }
 
-        function incrementDocumentCount() {
-            documentCount++;
+        async function incrementDocumentCount() {
             try {
-                localStorage.setItem('usmle_doc_count', documentCount.toString());
+                const response = await fetch(`https://api.countapi.xyz/hit/${COUNTAPI_NAMESPACE}/${COUNTAPI_KEY}`);
+                const data = await response.json();
+                documentCount = data.value;
+                updateStatsDisplay();
             } catch (e) {
-                // localStorage not available
-                console.log('Could not save to localStorage');
+                console.log('Could not increment count on API');
+                documentCount++;
+                updateStatsDisplay();
             }
-            updateStatsDisplay();
         }
 
         function updateStatsDisplay() {
